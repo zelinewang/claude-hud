@@ -116,6 +116,10 @@ export function renderSessionLine(ctx: RenderContext): string {
     parts.push(dim(ctx.transcript.sessionName));
   }
 
+  if (display?.showClaudeCodeVersion && ctx.claudeCodeVersion) {
+    parts.push(dim(`CC v${ctx.claudeCodeVersion}`));
+  }
+
   // Config counts (respects environmentThreshold)
   if (display?.showConfigCounts !== false) {
     const totalCounts = ctx.claudeMdCount + ctx.rulesCount + ctx.mcpCount + ctx.hooksCount;

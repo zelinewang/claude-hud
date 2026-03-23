@@ -129,7 +129,7 @@ test('main includes git status in render context', async () => {
       showSeparators: false,
       pathLevels: 1,
       gitStatus: { enabled: true, showDirty: true, showAheadBehind: false, showFileStats: false },
-      display: { showModel: true, showContextBar: true, contextValue: 'percent', showConfigCounts: true, showDuration: true, showSpeed: false, showTokenBreakdown: true, showUsage: true, showTools: true, showAgents: true, showTodos: true, autocompactBuffer: 'enabled', usageThreshold: 0, sevenDayThreshold: 80, environmentThreshold: 0 },
+      display: { showModel: true, showContextBar: true, contextValue: 'percent', showConfigCounts: true, showDuration: true, showSpeed: false, showTokenBreakdown: true, showUsage: true, showTools: true, showAgents: true, showTodos: true, showClaudeCodeVersion: false, autocompactBuffer: 'enabled', usageThreshold: 0, sevenDayThreshold: 80, environmentThreshold: 0 },
       usage: { cacheTtlSeconds: 60, failureCacheTtlSeconds: 15 },
     }),
     render: (ctx) => {
@@ -166,4 +166,68 @@ test('main includes usageData in render context', async () => {
   });
 
   assert.deepEqual(renderedContext?.usageData, mockUsageData);
+});
+
+test('main includes Claude Code version in render context only when enabled', async () => {
+  let renderedContext;
+  let lookupCalls = 0;
+
+  await main({
+    readStdin: async () => ({
+      model: { display_name: 'Opus' },
+      context_window: { context_window_size: 100, current_usage: { input_tokens: 10 } },
+    }),
+    parseTranscript: async () => ({ tools: [], agents: [], todos: [] }),
+    countConfigs: async () => ({ claudeMdCount: 0, rulesCount: 0, mcpCount: 0, hooksCount: 0 }),
+    getGitStatus: async () => null,
+    getUsage: async () => null,
+    loadConfig: async () => ({
+      lineLayout: 'compact',
+      showSeparators: false,
+      pathLevels: 1,
+      gitStatus: { enabled: true, showDirty: true, showAheadBehind: false, showFileStats: false },
+      display: { showModel: true, showContextBar: true, contextValue: 'percent', showConfigCounts: true, showDuration: true, showSpeed: false, showTokenBreakdown: true, showUsage: true, showTools: false, showAgents: false, showTodos: false, showClaudeCodeVersion: true, autocompactBuffer: 'enabled', usageThreshold: 0, sevenDayThreshold: 80, environmentThreshold: 0 },
+      usage: { cacheTtlSeconds: 60, failureCacheTtlSeconds: 15 },
+    }),
+    getClaudeCodeVersion: async () => {
+      lookupCalls += 1;
+      return '2.1.81';
+    },
+    render: (ctx) => {
+      renderedContext = ctx;
+    },
+  });
+
+  assert.equal(lookupCalls, 1);
+  assert.equal(renderedContext?.claudeCodeVersion, '2.1.81');
+});
+
+test('main skips Claude Code version lookup when disabled', async () => {
+  let lookupCalls = 0;
+
+  await main({
+    readStdin: async () => ({
+      model: { display_name: 'Opus' },
+      context_window: { context_window_size: 100, current_usage: { input_tokens: 10 } },
+    }),
+    parseTranscript: async () => ({ tools: [], agents: [], todos: [] }),
+    countConfigs: async () => ({ claudeMdCount: 0, rulesCount: 0, mcpCount: 0, hooksCount: 0 }),
+    getGitStatus: async () => null,
+    getUsage: async () => null,
+    loadConfig: async () => ({
+      lineLayout: 'compact',
+      showSeparators: false,
+      pathLevels: 1,
+      gitStatus: { enabled: true, showDirty: true, showAheadBehind: false, showFileStats: false },
+      display: { showModel: true, showContextBar: true, contextValue: 'percent', showConfigCounts: true, showDuration: true, showSpeed: false, showTokenBreakdown: true, showUsage: true, showTools: false, showAgents: false, showTodos: false, showClaudeCodeVersion: false, autocompactBuffer: 'enabled', usageThreshold: 0, sevenDayThreshold: 80, environmentThreshold: 0 },
+      usage: { cacheTtlSeconds: 60, failureCacheTtlSeconds: 15 },
+    }),
+    getClaudeCodeVersion: async () => {
+      lookupCalls += 1;
+      return '2.1.81';
+    },
+    render: () => {},
+  });
+
+  assert.equal(lookupCalls, 0);
 });

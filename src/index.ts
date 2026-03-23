@@ -6,6 +6,7 @@ import { getGitStatus } from './git.js';
 import { getUsage } from './usage-api.js';
 import { loadConfig } from './config.js';
 import { parseExtraCmdArg, runExtraCmd } from './extra-cmd.js';
+import { getClaudeCodeVersion } from './version.js';
 import type { RenderContext } from './types.js';
 import { fileURLToPath } from 'node:url';
 import { realpathSync } from 'node:fs';
@@ -19,6 +20,7 @@ export type MainDeps = {
   loadConfig: typeof loadConfig;
   parseExtraCmdArg: typeof parseExtraCmdArg;
   runExtraCmd: typeof runExtraCmd;
+  getClaudeCodeVersion: typeof getClaudeCodeVersion;
   render: typeof render;
   now: () => number;
   log: (...args: unknown[]) => void;
@@ -34,6 +36,7 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
     loadConfig,
     parseExtraCmdArg,
     runExtraCmd,
+    getClaudeCodeVersion,
     render,
     now: () => Date.now(),
     log: console.log,
@@ -77,6 +80,9 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
     const extraLabel = extraCmd ? await deps.runExtraCmd(extraCmd) : null;
 
     const sessionDuration = formatSessionDuration(transcript.sessionStart, deps.now);
+    const claudeCodeVersion = config.display.showClaudeCodeVersion
+      ? await deps.getClaudeCodeVersion()
+      : undefined;
 
     const ctx: RenderContext = {
       stdin,
@@ -90,6 +96,7 @@ export async function main(overrides: Partial<MainDeps> = {}): Promise<void> {
       usageData,
       config,
       extraLabel,
+      claudeCodeVersion,
     };
 
     deps.render(ctx);

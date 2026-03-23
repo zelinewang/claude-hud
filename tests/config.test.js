@@ -56,6 +56,7 @@ test('loadConfig returns valid config structure', async () => {
   assert.equal(typeof config.display.showAgents, 'boolean');
   assert.equal(typeof config.display.showTodos, 'boolean');
   assert.equal(typeof config.display.showSessionName, 'boolean');
+  assert.equal(typeof config.display.showClaudeCodeVersion, 'boolean');
   assert.equal(typeof config.colors, 'object');
   for (const key of ['context', 'usage', 'warning', 'usageWarning', 'critical']) {
     const t = typeof config.colors[key];
@@ -85,6 +86,17 @@ test('mergeConfig defaults showSessionName to false', () => {
 test('mergeConfig preserves explicit showSessionName=true', () => {
   const config = mergeConfig({ display: { showSessionName: true } });
   assert.equal(config.display.showSessionName, true);
+});
+
+test('mergeConfig defaults showClaudeCodeVersion to false', () => {
+  const config = mergeConfig({});
+  assert.equal(config.display.showClaudeCodeVersion, false);
+  assert.equal(DEFAULT_CONFIG.display.showClaudeCodeVersion, false);
+});
+
+test('mergeConfig preserves explicit showClaudeCodeVersion=true', () => {
+  const config = mergeConfig({ display: { showClaudeCodeVersion: true } });
+  assert.equal(config.display.showClaudeCodeVersion, true);
 });
 
 test('mergeConfig preserves customLine and truncates long values', () => {
