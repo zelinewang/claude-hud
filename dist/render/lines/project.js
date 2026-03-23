@@ -1,8 +1,9 @@
 import { getModelName, getProviderLabel } from '../../stdin.js';
 import { getOutputSpeed } from '../../speed-tracker.js';
-import { cyan, dim, magenta, yellow, red, claudeOrange } from '../colors.js';
+import { git as gitColor, gitBranch as gitBranchColor, label, model as modelColor, project as projectColor, red, custom as customColor } from '../colors.js';
 export function renderProjectLine(ctx) {
     const display = ctx.config?.display;
+    const colors = ctx.config?.colors;
     const parts = [];
     if (display?.showModel !== false) {
         const model = getModelName(ctx.stdin);
@@ -11,14 +12,14 @@ export function renderProjectLine(ctx) {
         const hasApiKey = !!process.env.ANTHROPIC_API_KEY;
         const modelQualifier = providerLabel ?? (showUsage && hasApiKey ? red('API') : undefined);
         const modelDisplay = modelQualifier ? `${model} | ${modelQualifier}` : model;
-        parts.push(cyan(`[${modelDisplay}]`));
+        parts.push(modelColor(`[${modelDisplay}]`, colors));
     }
     let projectPart = null;
     if (display?.showProject !== false && ctx.stdin.cwd) {
         const segments = ctx.stdin.cwd.split(/[/\\]/).filter(Boolean);
         const pathLevels = ctx.config?.pathLevels ?? 1;
         const projectPath = segments.length > 0 ? segments.slice(-pathLevels).join('/') : '/';
-        projectPart = yellow(projectPath);
+        projectPart = projectColor(projectPath, colors);
     }
     let gitPart = '';
     const gitConfig = ctx.config?.gitStatus;
@@ -51,7 +52,7 @@ export function renderProjectLine(ctx) {
                 gitParts.push(` ${statParts.join(' ')}`);
             }
         }
-        gitPart = `${magenta('git:(')}${cyan(gitParts.join(''))}${magenta(')')}`;
+        gitPart = `${gitColor('git:(', colors)}${gitBranchColor(gitParts.join(''), colors)}${gitColor(')', colors)}`;
     }
     if (projectPart && gitPart) {
         parts.push(`${projectPart} ${gitPart}`);
@@ -63,26 +64,26 @@ export function renderProjectLine(ctx) {
         parts.push(gitPart);
     }
     if (display?.showSessionName && ctx.transcript.sessionName) {
-        parts.push(dim(ctx.transcript.sessionName));
+        parts.push(label(ctx.transcript.sessionName, colors));
     }
     if (display?.showClaudeCodeVersion && ctx.claudeCodeVersion) {
-        parts.push(dim(`CC v${ctx.claudeCodeVersion}`));
+        parts.push(label(`CC v${ctx.claudeCodeVersion}`, colors));
     }
     if (ctx.extraLabel) {
-        parts.push(dim(ctx.extraLabel));
+        parts.push(label(ctx.extraLabel, colors));
     }
     if (display?.showSpeed) {
         const speed = getOutputSpeed(ctx.stdin);
         if (speed !== null) {
-            parts.push(dim(`out: ${speed.toFixed(1)} tok/s`));
+            parts.push(label(`out: ${speed.toFixed(1)} tok/s`, colors));
         }
     }
     if (display?.showDuration !== false && ctx.sessionDuration) {
-        parts.push(dim(`⏱️  ${ctx.sessionDuration}`));
+        parts.push(label(`⏱️  ${ctx.sessionDuration}`, colors));
     }
     const customLine = display?.customLine;
     if (customLine) {
-        parts.push(claudeOrange(customLine));
+        parts.push(customColor(customLine, colors));
     }
     if (parts.length === 0) {
         return null;

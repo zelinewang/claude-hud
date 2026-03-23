@@ -1,6 +1,6 @@
 import { isLimitReached } from '../../types.js';
 import { getProviderLabel } from '../../stdin.js';
-import { critical, dim, getQuotaColor, quotaBar, RESET } from '../colors.js';
+import { critical, label, getQuotaColor, quotaBar, RESET } from '../colors.js';
 import { getAdaptiveBarWidth } from '../../utils/terminal.js';
 export function renderUsageLine(ctx) {
     const display = ctx.config?.display;
@@ -14,12 +14,12 @@ export function renderUsageLine(ctx) {
     if (getProviderLabel(ctx.stdin)) {
         return null;
     }
-    const label = dim('Usage');
+    const usageLabel = label('Usage', colors);
     if (isLimitReached(ctx.usageData)) {
         const resetTime = ctx.usageData.fiveHour === 100
             ? formatResetTime(ctx.usageData.fiveHourResetAt)
             : formatResetTime(ctx.usageData.sevenDayResetAt);
-        return `${label} ${critical(`⚠ Limit reached${resetTime ? ` (resets ${resetTime})` : ''}`, colors)}`;
+        return `${usageLabel} ${critical(`⚠ Limit reached${resetTime ? ` (resets ${resetTime})` : ''}`, colors)}`;
     }
     const threshold = display?.usageThreshold ?? 0;
     const fiveHour = ctx.usageData.fiveHour;
@@ -41,7 +41,7 @@ export function renderUsageLine(ctx) {
             barWidth,
             forceLabel: true,
         });
-        return `${label} ${weeklyOnlyPart}`;
+        return `${usageLabel} ${weeklyOnlyPart}`;
     }
     const fiveHourPart = formatUsageWindowPart({
         label: '5h',
@@ -60,13 +60,13 @@ export function renderUsageLine(ctx) {
             usageBarEnabled,
             barWidth,
         });
-        return `${label} ${fiveHourPart} | ${sevenDayPart}`;
+        return `${usageLabel} ${fiveHourPart} | ${sevenDayPart}`;
     }
-    return `${label} ${fiveHourPart}`;
+    return `${usageLabel} ${fiveHourPart}`;
 }
 function formatUsagePercent(percent, colors) {
     if (percent === null) {
-        return dim('--');
+        return label('--', colors);
     }
     const color = getQuotaColor(percent, colors);
     return `${color}${percent}%${RESET}`;
