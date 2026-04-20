@@ -1,5 +1,6 @@
 import type { HudConfig } from './config.js';
 import type { GitStatus } from './git.js';
+import type { EffortInfo } from './effort.js';
 
 export interface StdinData {
   transcript_path?: string;
@@ -37,6 +38,8 @@ export interface StdinData {
       resets_at?: number | null;
     } | null;
   } | null;
+  // Future: Claude Code may expose effort level directly in stdin JSON
+  effort?: string | null;
 }
 
 export interface ToolEntry {
@@ -113,4 +116,5 @@ export interface RenderContext {
   extraLabel: string | null;
   outputStyle?: string;
   claudeCodeVersion?: string;
+  effortInfo?: EffortInfo;
 }

@@ -22,7 +22,11 @@ export function renderProjectLine(ctx: RenderContext): string | null {
     const model = formatModelName(getModelName(ctx.stdin), ctx.config?.display?.modelFormat, ctx.config?.display?.modelOverride);
     const providerLabel = getProviderLabel(ctx.stdin);
     const modelQualifier = providerLabel ?? undefined;
-    const modelDisplay = modelQualifier ? `${model} | ${modelQualifier}` : model;
+    let modelDisplay = modelQualifier ? `${model} | ${modelQualifier}` : model;
+    if (ctx.effortInfo) {
+      const { symbol, level } = ctx.effortInfo;
+      modelDisplay += symbol ? ` ${symbol}${level}` : ` ${level}`;
+    }
     parts.push(modelColor(`[${modelDisplay}]`, colors));
   }
 
