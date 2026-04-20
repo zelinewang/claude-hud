@@ -137,10 +137,16 @@ export function renderSessionLine(ctx) {
     // Usage limits display (shown when enabled in config, respects usageThreshold)
     if (display?.showUsage !== false && ctx.usageData && !providerLabel) {
         if (isLimitReached(ctx.usageData)) {
+            const showResetLabel = display?.showResetLabel ?? true;
             const resetTime = ctx.usageData.fiveHour === 100
                 ? formatResetTime(ctx.usageData.fiveHourResetAt, timeFormat)
                 : formatResetTime(ctx.usageData.sevenDayResetAt, timeFormat);
-            parts.push(critical(`⚠ ${t('status.limitReached')}${resetTime ? ` (${t(resetsKey)} ${resetTime})` : ''}`, colors));
+            const resetSuffix = resetTime
+                ? showResetLabel
+                    ? ` (${t(resetsKey)} ${resetTime})`
+                    : ` (${resetTime})`
+                : '';
+            parts.push(critical(`⚠ ${t('status.limitReached')}${resetSuffix}`, colors));
         }
         else {
             const usageThreshold = display?.usageThreshold ?? 0;
@@ -149,6 +155,7 @@ export function renderSessionLine(ctx) {
             const effectiveUsage = Math.max(fiveHour ?? 0, sevenDay ?? 0);
             if (effectiveUsage >= usageThreshold) {
                 const usageBarEnabled = display?.usageBarEnabled ?? true;
+                const showResetLabel = display?.showResetLabel ?? true;
                 if (fiveHour === null && sevenDay !== null) {
                     const weeklyOnlyPart = formatUsageWindowPart({
                         label: t('label.weekly'),
@@ -158,6 +165,7 @@ export function renderSessionLine(ctx) {
                         usageBarEnabled,
                         barWidth,
                         timeFormat,
+                        showResetLabel,
                         forceLabel: true,
                     });
                     parts.push(weeklyOnlyPart);
@@ -171,6 +179,7 @@ export function renderSessionLine(ctx) {
                         usageBarEnabled,
                         barWidth,
                         timeFormat,
+                        showResetLabel,
                     });
                     const sevenDayThreshold = display?.sevenDayThreshold ?? 80;
                     if (sevenDay !== null && sevenDay >= sevenDayThreshold) {
@@ -182,6 +191,7 @@ export function renderSessionLine(ctx) {
                             usageBarEnabled,
                             barWidth,
                             timeFormat,
+                            showResetLabel,
                             forceLabel: true,
                         });
                         parts.push(`${label(t('label.usage'), colors)} ${fiveHourPart}`);
@@ -271,7 +281,7 @@ function formatUsagePercent(percent, colors) {
     const color = getQuotaColor(percent, colors);
     return `${color}${percent}%${RESET}`;
 }
-function formatUsageWindowPart({ label: windowLabel, percent, resetAt, colors, usageBarEnabled, barWidth, timeFormat = 'relative', forceLabel = false, }) {
+function formatUsageWindowPart({ label: windowLabel, percent, resetAt, colors, usageBarEnabled, barWidth, timeFormat = 'relative', showResetLabel, forceLabel = false, }) {
     const usageDisplay = formatUsagePercent(percent, colors);
     const reset = formatResetTime(resetAt, timeFormat);
     const styledLabel = label(windowLabel, colors);
@@ -282,14 +292,19 @@ function formatUsageWindowPart({ label: windowLabel, percent, resetAt, colors, u
         // Absolute/both modes use the preposition form instead — "(at 14:30 / 5h)" is incoherent.
         const barReset = timeFormat === 'relative'
             ? (reset ? `${reset} / ${windowLabel}` : null)
-            : (reset ? `${t(resetsKey)} ${reset}` : null);
+            : (reset ? (showResetLabel ? `${t(resetsKey)} ${reset}` : reset) : null);
         const body = barReset
             ? `${quotaBar(percent ?? 0, barWidth, colors)} ${usageDisplay} (${barReset})`
             : `${quotaBar(percent ?? 0, barWidth, colors)} ${usageDisplay}`;
         return forceLabel ? `${styledLabel} ${body}` : body;
     }
-    return reset
-        ? `${styledLabel} ${usageDisplay} (${t(resetsKey)} ${reset})`
+    const resetSuffix = reset
+        ? showResetLabel
+            ? `(${t(resetsKey)} ${reset})`
+            : `(${reset})`
+        : '';
+    return resetSuffix
+        ? `${styledLabel} ${usageDisplay} ${resetSuffix}`
         : `${styledLabel} ${usageDisplay}`;
 }
 //# sourceMappingURL=session-line.js.map
