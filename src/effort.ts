@@ -31,11 +31,12 @@ export type StdinEffortInput = string | StdinEffort | null | undefined;
 /**
  * Resolve the current session's effort level.
  *
- * Priority:
- * 1. stdin.effort as object `{ level: string }` — Claude Code 2.1.115+
- * 2. stdin.effort as bare string — original PR #471 future-proofed path
- * 3. Parent process CLI args — `--effort` flag captured from ppid
- * 4. null
+ * Resolution order (matches `extractEffortString` below):
+ * 1. stdin.effort as non-empty string — original PR #471 future-proofed path.
+ * 2. stdin.effort as object with string `level` — Claude Code 2.1.115+ schema
+ *    (e.g., `{ "level": "max" }`).
+ * 3. Parent process CLI args — `--effort` flag captured from ppid.
+ * 4. null.
  *
  * Non-matching inputs (numbers, booleans, arrays, objects without a string
  * `level`) fall through to step 3 rather than crashing.
